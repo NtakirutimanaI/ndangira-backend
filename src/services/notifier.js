@@ -1,6 +1,81 @@
-const { sendEmail, sendSMS } = require('../services/notificationService');
+const { sendEmail, sendSMS } = require('./notificationService');
+const Subscriber = require('../models/Subscriber');
+
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 const safe = async (fn) => { try { await fn(); } catch (e) { console.error('Notification failed:', e.message || e); } };
+
+const getActiveSubscriberEmails = async () => {
+  const subs = await Subscriber.find({ isActive: true }).select('email');
+  return [...new Set(subs.map((s) => (s.email || '').trim().toLowerCase()).filter(Boolean))];
+};
+
+const sendToSubscribers = async ({ subject, text, html }) => {
+  const emails = await getActiveSubscriberEmails();
+  if (!emails.length) return { sent: 0 };
+  // Send individually to avoid exposing recipient list and to handle per-address issues
+  await Promise.all(emails.map((to) => safe(() => sendEmail({ to, subject, text, html }))));
+  return { sent: emails.length };
+};
+
+const notifySubscribersNewProperty = async ({ property }) => {
+  if (!property) return;
+  const title = property.title || 'New Property';
+  const location = [property.area, property.city].filter(Boolean).join(', ');
+  const price = property.price != null ? `${Number(property.price).toLocaleString()} ${property.currency || 'RWF'}` : '';
+  const link = `${CLIENT_URL}/listings/${property._id}`;
+  const subject = `Ndangira - New Property: ${title}`;
+  const desc = property.description ? String(property.description).slice(0, 300) : '';
+  const text = `New property published on Ndangira!\n\n${title}\n${location ? location + '\n' : ''}${price ? price + '\n' : ''}\n${desc}\n\nView: ${link}`;
+  const html = `
+    <h2>New Property on Ndangira</h2>
+    <p><strong>${title}</strong></p>
+    ${location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+    ${price ? `<p><strong>Price:</strong> ${price}</p>` : ''}
+    ${desc ? `<p>${desc}</p>` : ''}
+    <p><a href="${link}">View property</a></p>
+  `;
+  await safe(() => sendToSubscribers({ subject, text, html }));
+};
+
+const notifySubscribersNewJob = async ({ job }) => {
+  if (!job) return;
+  const title = job.title || 'New Job';
+  const company = job.company || '';
+  const location = job.location || '';
+  const link = `${CLIENT_URL}/jobs`;
+  const subject = `Ndangira - New Job: ${title}`;
+  const desc = job.description ? String(job.description).slice(0, 300) : '';
+  const text = `New job posted on Ndangira!\n\n${title}${company ? ' at ' + company : ''}\n${location ? location + '\n' : ''}${job.type ? job.type + '\n' : ''}\n${desc}\n\nView jobs: ${link}`;
+  const html = `
+    <h2>New Job on Ndangira</h2>
+    <p><strong>${title}</strong>${company ? ` at ${company}` : ''}</p>
+    ${location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+    ${job.type ? `<p><strong>Type:</strong> ${job.type}</p>` : ''}
+    ${desc ? `<p>${desc}</p>` : ''}
+    <p><a href="${link}">View jobs</a></p>
+  `;
+  await safe(() => sendToSubscribers({ subject, text, html }));
+};
+
+const notifySubscribersNewAd = async ({ ad }) => {
+  if (!ad) return;
+  const title = ad.title || 'New Advertisement';
+  const company = ad.companyName || '';
+  const link = `${CLIENT_URL}/advertise`;
+  const subject = `Ndangira - New Advertisement: ${title}`;
+  const desc = ad.description ? String(ad.description).slice(0, 300) : '';
+  const target = ad.targetUrl ? `<p><a href="${ad.targetUrl}">Visit advertiser</a></p>` : '';
+  const text = `New advertisement on Ndangira!\n\n${title}${company ? ' - ' + company : ''}\n\n${desc}\n\nView: ${link}`;
+  const html = `
+    <h2>New Advertisement on Ndangira</h2>
+    <p><strong>${title}</strong>${company ? ` — ${company}` : ''}</p>
+    ${desc ? `<p>${desc}</p>` : ''}
+    ${target}
+    <p><a href="${link}">View advertisements</a></p>
+  `;
+  await safe(() => sendToSubscribers({ subject, text, html }));
+};
 
 const notifyPaymentSuccess = async ({ user, plan, amount }) => {
   if (!user) return;
@@ -61,4 +136,4 @@ const notifyUserVerified = async ({ user, isVerified }) => {
   }
 };
 
-module.exports = { notifyPaymentSuccess, notifyPropertyApproved, notifyPropertyRejected, notifyUserVerified };
+module.exports = { notifyPaymentSuccess, notifyPropertyApproved, notifyPropertyRejected, notifyUserVerified, notifySubscribersNewProperty, notifySubscribersNewJob, notifySubscribersNewAd };

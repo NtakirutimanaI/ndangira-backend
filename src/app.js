@@ -19,6 +19,7 @@ app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/ads', require('./routes/adRoutes'));
+app.use('/api/subscribers', require('./routes/subscriberRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 

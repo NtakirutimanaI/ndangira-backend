@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Ad = require('../models/Ad');
+const { notifySubscribersNewAd } = require('../services/notifier');
 
 const getAllAds = asyncHandler(async (req, res) => {
   const ads = await Ad.find().sort('-createdAt').populate('reviewedBy', 'name email');
@@ -43,6 +44,7 @@ const approveAd = asyncHandler(async (req, res) => {
     e.statusCode = 400;
     throw e;
   }
+  const wasActive = ad.isActive && ad.status === 'approved';
   const now = new Date();
   const months = ad.plan === 'yearly' ? 12 : 1;
   const expires = new Date(now);
@@ -55,6 +57,9 @@ const approveAd = asyncHandler(async (req, res) => {
   ad.reviewedAt = now;
   ad.rejectionReason = undefined;
   await ad.save();
+  if (!wasActive) {
+    try { await notifySubscribersNewAd({ ad }); } catch (e) { console.error('notifySubscribersNewAd error:', e.message || e); }
+  }
   res.status(200).json({ success: true, data: ad });
 });
 

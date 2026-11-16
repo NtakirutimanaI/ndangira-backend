@@ -1,7 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
 const Property = require('../models/Property');
-const { notifyUserVerified, notifyPropertyApproved, notifyPropertyRejected } = require('../services/notifier');
+const { notifyUserVerified, notifyPropertyApproved, notifyPropertyRejected, notifySubscribersNewProperty } = require('../services/notifier');
 
 const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find().select('-password').sort('-createdAt');
@@ -33,11 +33,15 @@ const approveProperty = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+  const wasPublished = property.isPublished;
   property.isPublished = true;
   property.isActive = true;
   await property.save();
   const owner = await User.findById(property.owner);
   try { await notifyPropertyApproved({ property, owner }); } catch (e) { console.error('notifyPropertyApproved error:', e.message || e); }
+  if (!wasPublished) {
+    try { await notifySubscribersNewProperty({ property }); } catch (e) { console.error('notifySubscribersNewProperty error:', e.message || e); }
+  }
   res.status(200).json({ success: true, data: property });
 });
 

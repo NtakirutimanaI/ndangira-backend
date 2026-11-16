@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Job = require('../models/Job');
+const { notifySubscribersNewJob } = require('../services/notifier');
 
 const getAllJobs = asyncHandler(async (req, res) => {
   const jobs = await Job.find().sort('-createdAt').populate('submittedBy', 'name email').populate('reviewedBy', 'name email');
@@ -18,12 +19,16 @@ const approveJob = asyncHandler(async (req, res) => {
     error.statusCode = 400;
     throw error;
   }
+  const wasPublished = job.isPublished;
   job.status = 'approved';
   job.isPublished = true;
   job.reviewedBy = req.user._id;
   job.reviewedAt = new Date();
   job.rejectionReason = undefined;
   await job.save();
+  if (!wasPublished) {
+    try { await notifySubscribersNewJob({ job }); } catch (e) { console.error('notifySubscribersNewJob error:', e.message || e); }
+  }
   res.status(200).json({ success: true, data: job });
 });
 

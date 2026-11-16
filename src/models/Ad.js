@@ -11,6 +11,7 @@ const adSchema = new mongoose.Schema(
     imageUrl: { type: String, trim: true },
     images: { type: [String], default: [] },
     videoLinks: { type: [String], default: [] },
+    videos: { type: [String], default: [] },
     targetUrl: { type: String, trim: true },
     plan: { type: String, enum: ['monthly', 'yearly'], required: true },
     amount: { type: Number, required: true },

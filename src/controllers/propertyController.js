@@ -105,7 +105,10 @@ const updateProperty = asyncHandler(async (req, res) => {
     error.statusCode = 401;
     throw error;
   }
-  property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  const allowed = ['title','titleRw','description','descriptionRw','type','category','price','currency','area','location','locationRw','address','city','country','contactPhone','contactEmail','upi'];
+  const payload = {};
+  allowed.forEach((k) => { if (req.body[k] !== undefined) payload[k] = req.body[k]; });
+  property = await Property.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
   res.status(200).json({ success: true, data: property });
 });
 

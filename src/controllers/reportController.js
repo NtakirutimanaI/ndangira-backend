@@ -7,6 +7,7 @@ const Payment = require('../models/Payment');
 const Category = require('../models/Category');
 const Job = require('../models/Job');
 const Ad = require('../models/Ad');
+const Subscriber = require('../models/Subscriber');
 
 const parseRange = (from, to, field = 'createdAt') => {
   const f = {};
@@ -24,13 +25,14 @@ const parseRange = (from, to, field = 'createdAt') => {
 const inRange = (base, from, to, field = 'createdAt') => ({ ...base, ...parseRange(from, to, field) });
 
 const getSummaryData = async (from, to) => {
-  const [users, properties, payments, categories, jobs, ads] = await Promise.all([
+  const [users, properties, payments, categories, jobs, ads, subscribers] = await Promise.all([
     User.find(parseRange(from, to)).select('-password').lean(),
     Property.find(parseRange(from, to)).populate('owner', 'name email').lean(),
     Payment.find(parseRange(from, to)).populate('user', 'name email').populate('property', 'title').lean(),
     Category.find(parseRange(from, to)).lean(),
     Job.find(parseRange(from, to)).populate('submittedBy', 'name email').lean(),
     Ad.find(parseRange(from, to)).lean(),
+    Subscriber.find(parseRange(from, to)).lean(),
   ]);
 
   const completedPayments = payments.filter(p => p.status === 'completed');
@@ -72,9 +74,11 @@ const getSummaryData = async (from, to) => {
       approvedAds: ads.filter(a => a.status === 'approved').length,
       activeAds: ads.filter(a => a.isActive).length,
       paidAds: ads.filter(a => a.paymentStatus === 'paid').length,
+      subscribers: subscribers.length,
+      activeSubscribers: subscribers.filter(s => s.isActive).length,
     },
     breakdown: { byType, byCategory },
-    users, properties, payments, categories, jobs, ads,
+    users, properties, payments, categories, jobs, ads, subscribers,
   };
 };
 
@@ -99,6 +103,8 @@ const getReportSummary = asyncHandler(async (req, res) => {
     approvedAds: c.approvedAds,
     activeAds: c.activeAds,
     paidAds: c.paidAds,
+    subscribers: c.subscribers,
+    activeSubscribers: c.activeSubscribers,
   };
 
   if (type === 'users') {
@@ -162,6 +168,16 @@ const getReportSummary = asyncHandler(async (req, res) => {
       },
     });
   }
+  if (type === 'subscribers') {
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...base,
+        count: data.subscribers.length,
+        subscribers: data.subscribers.map(s => ({ _id: s._id, email: s.email, isActive: s.isActive, createdAt: s.createdAt })),
+      },
+    });
+  }
   if (type === 'all') {
     return res.status(200).json({
       success: true,
@@ -174,6 +190,7 @@ const getReportSummary = asyncHandler(async (req, res) => {
         categories: data.categories.map(cat => ({ _id: cat._id, name: cat.name, slug: cat.slug, isPublished: cat.isPublished, createdAt: cat.createdAt })),
         jobs: data.jobs.map(j => ({ _id: j._id, title: j.title, company: j.company, location: j.location, type: j.type, category: j.category, amount: j.amount, currency: j.currency, paymentStatus: j.paymentStatus, status: j.status, isPublished: j.isPublished, submittedBy: j.submittedBy ? { name: j.submittedBy.name, email: j.submittedBy.email } : null, createdAt: j.createdAt })),
         ads: data.ads.map(a => ({ _id: a._id, companyName: a.companyName, contactEmail: a.contactEmail, contactPhone: a.contactPhone, title: a.title, plan: a.plan, amount: a.amount, currency: a.currency, paymentStatus: a.paymentStatus, status: a.status, isActive: a.isActive, startsAt: a.startsAt, expiresAt: a.expiresAt, createdAt: a.createdAt })),
+        subscribers: data.subscribers.map(s => ({ _id: s._id, email: s.email, isActive: s.isActive, createdAt: s.createdAt })),
       },
     });
   }
@@ -212,7 +229,7 @@ const sendPdf = (res, filename, reportType, meta, sections) => {
   const muted = '#6b7280';
   const light = '#f3f4f6';
   const border = '#e5e7eb';
-  const typeNames = { summary: 'Summary Report', users: 'Users Report', properties: 'Properties Report', payments: 'Payments Report', categories: 'Categories Report', jobs: 'Jobs Report', ads: 'Advertisements Report', all: 'Full Platform Report' };
+  const typeNames = { summary: 'Summary Report', users: 'Users Report', properties: 'Properties Report', payments: 'Payments Report', categories: 'Categories Report', jobs: 'Jobs Report', ads: 'Advertisements Report', subscribers: 'Subscribers Report', all: 'Full Platform Report' };
   const reportTitle = typeNames[reportType] || `${String(reportType || 'Report').replace(/^\w/, c => c.toUpperCase())} Report`;
   const generated = fmtDate(new Date());
   const rangeText = `Period: ${meta.from ? fmtDate(meta.from) : 'All time'}  to  ${meta.to ? fmtDate(meta.to) : 'Now'}`;
@@ -351,7 +368,7 @@ const sendPdf = (res, filename, reportType, meta, sections) => {
     doc.save();
     doc.moveTo(doc.page.margins.left, fy - 6).lineTo(pageWidth - doc.page.margins.right, fy - 6).strokeColor(border).lineWidth(0.5).stroke();
     doc.fillColor(muted).font('Helvetica').fontSize(8).text('Ndangira Platform Report', doc.page.margins.left, fy, { lineBreak: false });
-    doc.text(`${reportTitle}  •  ${generated}`, doc.page.margins.left, fy, { width: contentWidth, align: 'center', lineBreak: false });
+    doc.text(`${reportTitle}  Ã¢â‚¬Â¢  ${generated}`, doc.page.margins.left, fy, { width: contentWidth, align: 'center', lineBreak: false });
     doc.text(`Page ${i - range.start + 1} of ${totalPages}`, doc.page.margins.left, fy, { width: contentWidth, align: 'right', lineBreak: false });
     doc.restore();
   }
@@ -388,6 +405,8 @@ const exportReport = asyncHandler(async (req, res) => {
           ['Advertisements', c.ads],
           ['Approved Ads', c.approvedAds],
           ['Active Ads', c.activeAds],
+          ['Subscribers', c.subscribers],
+          ['Active Subscribers', c.activeSubscribers],
         ].map(([metric, value]) => ({ metric, value })),
       });
       if (reportTypeNorm === 'all') {
@@ -457,6 +476,15 @@ const exportReport = asyncHandler(async (req, res) => {
         rows: data.ads.map(a => ({ company: a.companyName, title: a.title, plan: a.plan, amount: a.amount, payment: a.paymentStatus, status: a.status, active: a.isActive ? 'Yes' : 'No', email: a.contactEmail || '', expires: fmtDate(a.expiresAt), created: fmtDate(a.createdAt) })),
       });
     }
+    if (reportTypeNorm === 'subscribers' || reportTypeNorm === 'all') {
+      sheets.push({
+        name: 'Subscribers',
+        columns: [
+          { header: 'Email', key: 'email', width: 32 }, { header: 'Active', key: 'active', width: 12 }, { header: 'Subscribed', key: 'created', width: 20 },
+        ],
+        rows: data.subscribers.map(s => ({ email: s.email, active: s.isActive ? 'Yes' : 'No', created: fmtDate(s.createdAt) })),
+      });
+    }
     return sendExcel(res, `ndangira-report-${reportTypeNorm}-${stamp}.xlsx`, sheets);
   }
 
@@ -481,6 +509,8 @@ const exportReport = asyncHandler(async (req, res) => {
         ['Advertisements', c.ads],
         ['Approved Ads', c.approvedAds],
         ['Active Ads', c.activeAds],
+        ['Subscribers', c.subscribers || 0],
+        ['Active Subscribers', c.activeSubscribers || 0],
       ],
     });
   }
@@ -501,6 +531,9 @@ const exportReport = asyncHandler(async (req, res) => {
   }
   if (reportTypeNorm === 'ads' || reportTypeNorm === 'all') {
     sections.push({ title: 'Advertisements', columns: ['Company', 'Title', 'Plan', 'Payment', 'Status', 'Expires'], rows: data.ads.map(a => [a.companyName, a.title, a.plan, `${a.paymentStatus} (${a.amount} ${a.currency || 'RWF'})`, `${a.status}${a.isActive ? '/active' : ''}`, fmtDate(a.expiresAt)]) });
+  }
+  if (reportTypeNorm === 'subscribers' || reportTypeNorm === 'all') {
+    sections.push({ title: 'Subscribers', columns: ['Email', 'Active', 'Subscribed'], rows: data.subscribers.map(s => [s.email, s.isActive ? 'Yes' : 'No', fmtDate(s.createdAt)]) });
   }
   sendPdf(res, `ndangira-report-${reportTypeNorm}-${stamp}.pdf`, reportTypeNorm, { from, to }, sections);
 });

@@ -41,6 +41,7 @@ const submitAdRequest = asyncHandler(async (req, res) => {
   const images = [...uploaded];
   const legacy = imageUrl ? String(imageUrl).trim() : '';
   if (legacy && !images.includes(legacy)) images.unshift(legacy);
+  const uploadedVideos = (req.files && req.files.videos ? req.files.videos : []).map((f) => `/uploads/${f.filename}`);
   const links = normalizeLinks(videoLinks);
 
   const ad = await Ad.create({
@@ -53,6 +54,7 @@ const submitAdRequest = asyncHandler(async (req, res) => {
     imageUrl: images[0] || undefined,
     images,
     videoLinks: links,
+    videos: uploadedVideos,
     targetUrl: targetUrl ? String(targetUrl).trim() : undefined,
     plan,
     amount,

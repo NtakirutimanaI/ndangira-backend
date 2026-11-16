@@ -6,7 +6,7 @@ const { getActiveAds, submitAdRequest, payAd } = require('../controllers/adContr
 const router = express.Router();
 
 router.get('/', getActiveAds);
-router.post('/request', protect, upload.fields([{ name: 'images', maxCount: 10 }]), submitAdRequest);
+router.post('/request', protect, upload.fields([{ name: 'images', maxCount: 10 }, { name: 'videos', maxCount: 5 }]), submitAdRequest);
 router.put('/:id/pay', protect, payAd);
 
 module.exports = router;

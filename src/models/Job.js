@@ -10,6 +10,7 @@ const jobSchema = new mongoose.Schema(
     description: { type: String, required: true },
     applyEmail: { type: String, trim: true },
     applyUrl: { type: String, trim: true },
+    image: { type: String, trim: true },
     amount: { type: Number, default: 5000 },
     currency: { type: String, default: 'RWF' },
     paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },

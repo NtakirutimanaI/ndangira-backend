@@ -6,6 +6,7 @@ const { getAllCategories, createCategory, updateCategory, deleteCategory } = req
 const { getReportSummary, exportReport } = require('../controllers/reportController');
 const { getAllJobs, approveJob, rejectJob, unpublishJob, deleteJob } = require('../controllers/adminJobController');
 const { getAllAds, updateAd, markAdPaid, approveAd, rejectAd, deactivateAd, deleteAd } = require('../controllers/adminAdController');
+const { getSubscribers, toggleSubscriber, deleteSubscriber } = require('../controllers/subscriberController');
 
 const router = express.Router();
 
@@ -38,6 +39,10 @@ router.put('/ads/:id/approve', approveAd);
 router.put('/ads/:id/reject', rejectAd);
 router.put('/ads/:id/deactivate', deactivateAd);
 router.delete('/ads/:id', deleteAd);
+
+router.get('/subscribers', getSubscribers);
+router.put('/subscribers/:id/toggle', toggleSubscriber);
+router.delete('/subscribers/:id', deleteSubscriber);
 
 router.get('/reports/summary', getReportSummary);
 router.get('/reports/export', exportReport);
