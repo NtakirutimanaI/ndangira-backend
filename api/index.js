@@ -4,7 +4,6 @@ const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-const errorHandler = require('./src/utils/errorHandler');
 
 const app = express();
 
@@ -12,6 +11,14 @@ app.use(express.json({ limit: '50mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
+
+// Inline error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  res.status(status).json({ success: false, error: message });
+});
 
 let cachedDb = null;
 
@@ -58,7 +65,5 @@ app.use('/api/ads', require('./src/routes/adRoutes'));
 app.use('/api/subscribers', require('./src/routes/subscriberRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use('/api/users', require('./src/routes/userRoutes'));
-
-app.use(errorHandler);
 
 module.exports = app;
