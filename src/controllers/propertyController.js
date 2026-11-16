@@ -49,8 +49,8 @@ const createProperty = asyncHandler(async (req, res) => {
   };
   delete propertyData.paymentId;
 
-  propertyData.images = req.files.images.map((f) => `/uploads/${f.filename}`);
-  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => `/uploads/${f.filename}`);
+  propertyData.images = req.files.images.map((f) => f.path);
+  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => f.path);
 
   const property = await Property.create(propertyData);
 

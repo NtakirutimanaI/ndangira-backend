@@ -28,7 +28,7 @@ const submitJob = asyncHandler(async (req, res) => {
     description: String(description),
     applyEmail: applyEmail ? String(applyEmail).trim() : undefined,
     applyUrl: applyUrl ? String(applyUrl).trim() : undefined,
-    image: req.file ? `/uploads/${req.file.filename}` : undefined,
+    image: req.file ? req.file.path : undefined,
     amount,
     currency: 'RWF',
     paymentStatus: 'unpaid',
@@ -54,7 +54,7 @@ const updateJob = asyncHandler(async (req, res) => {
   if (description !== undefined) job.description = String(description);
   if (applyEmail !== undefined) job.applyEmail = applyEmail ? String(applyEmail).trim() : undefined;
   if (applyUrl !== undefined) job.applyUrl = applyUrl ? String(applyUrl).trim() : undefined;
-  if (req.file) job.image = `/uploads/${req.file.filename}`;
+  if (req.file) job.image = req.file.path;
   // Re-submit for review after edit (keep payment status)
   job.status = 'pending';
   job.isPublished = false;

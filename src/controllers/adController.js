@@ -37,11 +37,11 @@ const submitAdRequest = asyncHandler(async (req, res) => {
     throw error;
   }
   const amount = plan === 'yearly' ? 500000 : 50000;
-  const uploaded = (req.files && req.files.images ? req.files.images : []).map((f) => `/uploads/${f.filename}`);
+  const uploaded = (req.files && req.files.images ? req.files.images : []).map((f) => f.path);
   const images = [...uploaded];
   const legacy = imageUrl ? String(imageUrl).trim() : '';
   if (legacy && !images.includes(legacy)) images.unshift(legacy);
-  const uploadedVideos = (req.files && req.files.videos ? req.files.videos : []).map((f) => `/uploads/${f.filename}`);
+  const uploadedVideos = (req.files && req.files.videos ? req.files.videos : []).map((f) => f.path);
   const links = normalizeLinks(videoLinks);
 
   const ad = await Ad.create({
