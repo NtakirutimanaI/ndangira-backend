@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Property = require('../models/Property');
 const Job = require('../models/Job');
 const Ad = require('../models/Ad');
+const Category = require('../models/Category');
 const bcrypt = require('bcryptjs');
 const { notifyUserVerified, notifyPropertyApproved, notifyPropertyRejected, notifySubscribersNewProperty } = require('../services/notifier');
 
@@ -11,6 +12,15 @@ const seedDatabase = asyncHandler(async (req, res) => {
   await Property.deleteMany({});
   await Job.deleteMany({});
   await Ad.deleteMany({});
+  await Category.deleteMany({});
+  
+  // Seed categories
+  const categories = [
+    { name: 'For Sale', slug: 'sale', isPublished: true },
+    { name: 'For Rent', slug: 'rent', isPublished: true },
+    { name: 'Other', slug: 'other', isPublished: true },
+  ];
+  await Category.insertMany(categories);
   
   // Create test users
   const hashedPassword = await bcrypt.hash('password123', 10);
