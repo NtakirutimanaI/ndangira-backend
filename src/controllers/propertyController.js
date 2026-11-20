@@ -78,8 +78,6 @@ const createProperty = asyncHandler(async (req, res) => {
     platformUpi: platformContact.upi,
   };
   delete propertyData.paymentId;
-  delete propertyData.ownerPrice; // already set above
-  delete propertyData.platformPrice; // already set above
 
   propertyData.images = req.files.images.map((f) => f.path);
   if (req.files.videos) propertyData.videos = req.files.videos.map((f) => f.path);
