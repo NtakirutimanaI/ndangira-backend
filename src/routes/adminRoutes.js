@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
-const { getAllUsers, getAllProperties, verifyUser, approveProperty, rejectProperty, deleteUser, deleteProperty } = require('../controllers/adminController');
+const { getAllUsers, getAllProperties, verifyUser, approveProperty, rejectProperty, deleteUser, deleteProperty, seedDatabase } = require('../controllers/adminController');
 const { getAllCategories, createCategory, updateCategory, deleteCategory } = require('../controllers/categoryController');
 const { getReportSummary, exportReport } = require('../controllers/reportController');
 const { getAllJobs, approveJob, rejectJob, unpublishJob, deleteJob } = require('../controllers/adminJobController');
@@ -46,5 +46,7 @@ router.delete('/subscribers/:id', deleteSubscriber);
 
 router.get('/reports/summary', getReportSummary);
 router.get('/reports/export', exportReport);
+
+router.post('/seed', seedDatabase);
 
 module.exports = router;

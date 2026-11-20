@@ -11,8 +11,12 @@ const jobSchema = new mongoose.Schema(
     applyEmail: { type: String, trim: true },
     applyUrl: { type: String, trim: true },
     image: { type: String, trim: true },
-    amount: { type: Number, default: 5000 },
+    // Employer's budget (what they want to pay)
+    employerAmount: { type: Number, required: true },
+    // Platform amount displayed to applicants (employerAmount * 1.1)
+    platformAmount: { type: Number, required: true },
     currency: { type: String, default: 'RWF' },
+    platformFeePercent: { type: Number, default: 10 },
     paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
     isPublished: { type: Boolean, default: false },
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

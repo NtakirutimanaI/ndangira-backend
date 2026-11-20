@@ -8,11 +8,13 @@ const bcrypt = require('bcryptjs');
 const { notifyUserVerified, notifyPropertyApproved, notifyPropertyRejected, notifySubscribersNewProperty } = require('../services/notifier');
 
 const seedDatabase = asyncHandler(async (req, res) => {
-  // Clear existing data
-  await Property.deleteMany({});
-  await Job.deleteMany({});
-  await Ad.deleteMany({});
-  await Category.deleteMany({});
+  console.log('seedDatabase called');
+  try {
+    // Clear existing data
+    await Property.deleteMany({});
+    await Job.deleteMany({});
+    await Ad.deleteMany({});
+    await Category.deleteMany({});
   
   // Seed categories (for backward compatibility - transaction types and conditions)
   const categories = [
@@ -210,6 +212,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
   await Ad.insertMany(ads);
 
   res.status(200).json({ success: true, message: 'Database seeded successfully' });
+  } catch (err) {
+    console.error('Seed error:', err);
+    throw err;
+  }
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {

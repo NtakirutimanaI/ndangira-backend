@@ -49,4 +49,8 @@ router.get('/reports/export', exportReport);
 
 router.post('/seed', seedDatabase);
 
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Admin test route works' });
+});
+
 module.exports = router;
