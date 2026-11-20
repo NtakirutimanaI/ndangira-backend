@@ -88,6 +88,9 @@ app.use('/api/subscribers', require('./routes/subscriberRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
+// Public settings endpoint (no auth required)
+app.get('/api/settings', require('./controllers/settingsController').getSettings);
+
 app.get('/api/test-simple', (req, res) => {
   res.json({ success: true, message: 'Simple test route works' });
 });
