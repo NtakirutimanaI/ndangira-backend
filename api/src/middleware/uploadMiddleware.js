@@ -11,7 +11,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'ndangira',
+    folder: 'isange',
     allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'mp4', 'mov', 'avi', 'webm'],
     resource_type: 'auto',
     transformation: [{ quality: 'auto', fetch_format: 'auto' }],

@@ -18,7 +18,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
   const categories = [
     { name: 'For Sale', slug: 'sale', isPublished: true },
     { name: 'For Rent', slug: 'rent', isPublished: true },
-    { name: 'Other', slug: 'other', isPublished: true },
+    { name: 'New', slug: 'new', isPublished: true },
+    { name: 'Used', slug: 'used', isPublished: true },
   ];
   await Category.insertMany(categories);
   

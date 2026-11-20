@@ -20,7 +20,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
   }
   const msg = {
     to,
-    from: process.env.FROM_EMAIL || 'noreply@ndangira.com',
+    from: process.env.FROM_EMAIL || 'noreply@isange.com',
     subject,
     text,
     html,
@@ -37,7 +37,7 @@ const sendSMS = async ({ to, message }) => {
     const response = await sms.send({
       to: Array.isArray(to) ? to : [to],
       message,
-      from: process.env.AFRICASTALKING_SENDER_ID || 'NDANGIRA',
+      from: process.env.AFRICASTALKING_SENDER_ID || 'ISANGE',
     });
     return response;
   } catch (error) {
