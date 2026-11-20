@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const Property = require('../models/Property');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const path = require('path');
 
 const PLATFORM_FEE_PERCENT = 10;
 
@@ -79,8 +80,16 @@ const createProperty = asyncHandler(async (req, res) => {
   };
   delete propertyData.paymentId;
 
-  propertyData.images = req.files.images.map((f) => f.path);
-  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => f.path);
+  propertyData.images = req.files.images.map((f) => {
+    // For local storage, f.path is full path; we need just filename for /uploads/ URL
+    // For Cloudinary, f.path is the full URL
+    if (f.path.startsWith('http')) return f.path;
+    return path.basename(f.path);
+  });
+  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => {
+    if (f.path.startsWith('http')) return f.path;
+    return path.basename(f.path);
+  });
 
   const property = await Property.create(propertyData);
 
