@@ -15,6 +15,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
     await Job.deleteMany({});
     await Ad.deleteMany({});
     await Category.deleteMany({});
+    await User.deleteMany({ email: { $in: ['owner@test.com', 'admin@test.com'] } });
   
   // Seed categories (for backward compatibility - transaction types and conditions)
   const categories = [

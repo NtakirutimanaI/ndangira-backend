@@ -4,9 +4,7 @@ const propertySchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: true },
-    titleRw: { type: String },
     description: { type: String },
-    descriptionRw: { type: String },
     type: { type: String, enum: ['house', 'car', 'plot', 'material'], required: true },
     // Transaction type: sale or rent
     transactionType: { type: String, enum: ['sale', 'rent'], required: true },
@@ -20,7 +18,6 @@ const propertySchema = new mongoose.Schema(
     platformFeePercent: { type: Number, default: 10 },
     area: { type: String, required: true },
     location: { type: String },
-    locationRw: { type: String },
     address: { type: String },
     city: { type: String, default: 'Kigali' },
     country: { type: String, default: 'Rwanda' },

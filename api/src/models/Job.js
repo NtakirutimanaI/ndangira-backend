@@ -8,6 +8,7 @@ const jobSchema = new mongoose.Schema(
     type: { type: String, enum: ['Full-time', 'Part-time', 'Contract', 'Internship'], default: 'Full-time' },
     category: { type: String, trim: true, default: 'General' },
     description: { type: String, required: true },
+    // Employer contact (private)
     applyEmail: { type: String, trim: true },
     applyUrl: { type: String, trim: true },
     image: { type: String, trim: true },
@@ -17,6 +18,8 @@ const jobSchema = new mongoose.Schema(
     platformAmount: { type: Number, required: true },
     currency: { type: String, default: 'RWF' },
     platformFeePercent: { type: Number, default: 10 },
+    // Platform contact (public)
+    platformApplyEmail: { type: String, trim: true },
     paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
     isPublished: { type: Boolean, default: false },
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

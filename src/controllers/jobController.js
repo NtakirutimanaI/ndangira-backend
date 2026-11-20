@@ -11,11 +11,15 @@ const getPublishedJobs = asyncHandler(async (req, res) => {
   const jobs = await Job.find({ isPublished: true, status: 'approved', paymentStatus: 'paid' }).sort('-createdAt');
   const platformContact = getPlatformContact();
   
-  const publicJobs = jobs.map(j => ({
-    ...j.toObject(),
-    amount: j.platformAmount,
-    applyEmail: j.applyEmail || platformContact.email,
-  }));
+  const publicJobs = jobs.map(j => {
+    const obj = j.toObject();
+    return {
+      ...obj,
+      amount: obj.platformAmount,
+      applyEmail: obj.platformApplyEmail || platformContact.email,
+      applyUrl: obj.applyUrl,
+    };
+  });
   
   res.status(200).json({ success: true, count: jobs.length, data: publicJobs });
 });
@@ -59,6 +63,7 @@ const submitJob = asyncHandler(async (req, res) => {
     platformAmount,
     currency: 'RWF',
     platformFeePercent: PLATFORM_FEE_PERCENT,
+    platformApplyEmail: platformContact.email,
     paymentStatus: 'unpaid',
     submittedBy: req.user?._id,
     isPublished: false,

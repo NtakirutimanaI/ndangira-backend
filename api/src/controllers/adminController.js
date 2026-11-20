@@ -15,6 +15,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
     await Job.deleteMany({});
     await Ad.deleteMany({});
     await Category.deleteMany({});
+    await User.deleteMany({ email: { $in: ['owner@test.com', 'admin@test.com'] } });
   
   // Seed categories (for backward compatibility - transaction types and conditions)
   const categories = [
@@ -141,8 +142,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
       description: 'Looking for experienced React/Node developer',
       applyEmail: 'jobs@techrw.com',
       applyUrl: 'https://techrw.com/careers',
-      amount: 5000,
+      employerAmount: 5000,
+      platformAmount: 5500,
       currency: 'RWF',
+      platformFeePercent: 10,
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
@@ -156,8 +159,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
       category: 'Marketing',
       description: 'Lead marketing campaigns for growing startup',
       applyEmail: 'hr@rmg.rw',
-      amount: 5000,
+      employerAmount: 5000,
+      platformAmount: 5500,
       currency: 'RWF',
+      platformFeePercent: 10,
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
