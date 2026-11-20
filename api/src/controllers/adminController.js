@@ -14,7 +14,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
   await Ad.deleteMany({});
   await Category.deleteMany({});
   
-  // Seed categories
+  // Seed categories (for backward compatibility - transaction types and conditions)
   const categories = [
     { name: 'For Sale', slug: 'sale', isPublished: true },
     { name: 'For Rent', slug: 'rent', isPublished: true },
@@ -34,7 +34,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
     role: 'owner',
     upi: 'owner@upi'
   });
-
+  
   const admin = await User.create({
     name: 'Admin User',
     email: 'admin@test.com',
@@ -43,7 +43,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
     role: 'admin'
   });
 
-  // Create properties
+  // Create properties with new schema (transactionType + condition)
+  const PLATFORM_FEE_PERCENT = 10;
   const properties = [
     {
       title: 'Modern House in Kigali',
@@ -51,8 +52,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
       description: 'Beautiful 3 bedroom house with garden',
       descriptionRw: 'Inzu nziza y\'imiryango 3 iri na garden',
       type: 'house',
-      category: 'sale',
-      price: 150000000,
+      transactionType: 'sale',
+      condition: 'new',
+      ownerPrice: 150000000,
+      platformPrice: Math.round(150000000 * (1 + PLATFORM_FEE_PERCENT / 100)),
       currency: 'RWF',
       area: 'Kicukiro',
       location: 'Kicukiro, Kigali',
@@ -75,8 +78,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
       description: '2 bedroom apartment near city center',
       descriptionRw: 'Apatemente y\'imiryango 2 hafi y\'isoko',
       type: 'house',
-      category: 'rent',
-      price: 500000,
+      transactionType: 'rent',
+      condition: 'used',
+      ownerPrice: 500000,
+      platformPrice: Math.round(500000 * (1 + PLATFORM_FEE_PERCENT / 100)),
       currency: 'RWF',
       area: 'Nyarugenge',
       location: 'Nyarugenge, Kigali',
@@ -99,8 +104,10 @@ const seedDatabase = asyncHandler(async (req, res) => {
       description: 'Prime commercial land for development',
       descriptionRw: 'Ibice byiza byo kwubaka ibirimo byo gukorera',
       type: 'plot',
-      category: 'sale',
-      price: 80000000,
+      transactionType: 'sale',
+      condition: 'new',
+      ownerPrice: 80000000,
+      platformPrice: Math.round(80000000 * (1 + PLATFORM_FEE_PERCENT / 100)),
       currency: 'RWF',
       area: 'Gasabo',
       location: 'Gasabo, Kigali',

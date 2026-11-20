@@ -157,12 +157,13 @@ const getProperty = asyncHandler(async (req, res) => {
 });
 
 const searchProperties = asyncHandler(async (req, res) => {
-  const { area, city, type, category } = req.query;
+  const { area, city, type, transactionType, condition } = req.query;
   const query = { isPublished: true, isActive: true };
   if (area) query.area = { $regex: area, $options: 'i' };
   if (city) query.city = { $regex: city, $options: 'i' };
   if (type) query.type = type;
-  if (category) query.category = category;
+  if (transactionType) query.transactionType = transactionType;
+  if (condition) query.condition = condition;
   
   const properties = await Property.find(query).sort('-createdAt');
   const platformContact = getPlatformContact();
@@ -211,7 +212,7 @@ const updateProperty = asyncHandler(async (req, res) => {
   
   const allowed = [
     'title','titleRw','description','descriptionRw',
-    'type','category','currency',
+    'type','transactionType','condition','currency',
     'area','location','locationRw','address','city','country',
     'ownerPhone','ownerEmail','ownerUpi',
     'ownerPrice' // owner can update their desired price

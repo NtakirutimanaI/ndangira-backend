@@ -8,7 +8,10 @@ const propertySchema = new mongoose.Schema(
     description: { type: String },
     descriptionRw: { type: String },
     type: { type: String, enum: ['house', 'car', 'plot', 'material'], required: true },
-    category: { type: String, required: true },
+    // Transaction type: sale or rent
+    transactionType: { type: String, enum: ['sale', 'rent'], required: true },
+    // Condition: new or used
+    condition: { type: String, enum: ['new', 'used'], required: true },
     // Owner's desired price (what they receive)
     ownerPrice: { type: Number, required: true },
     // Platform price displayed to clients (ownerPrice * 1.1)
