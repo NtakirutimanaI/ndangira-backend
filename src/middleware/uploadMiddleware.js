@@ -31,7 +31,13 @@ try {
       },
     });
     
-    upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+    upload = multer({ 
+      storage, 
+      limits: { 
+        fileSize: 100 * 1024 * 1024, // 100MB for videos
+        files: 10 
+      } 
+    });
     cloudinary = cloudinaryLib;
     console.log('Using Cloudinary for file uploads');
   } else {
@@ -62,7 +68,14 @@ try {
     else cb(new Error('Images and videos only'));
   };
   
-  upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } });
+  upload = multer({ 
+    storage, 
+    fileFilter, 
+    limits: { 
+      fileSize: 100 * 1024 * 1024, // 100MB for videos
+      files: 10 
+    } 
+  });
 }
 
 module.exports = { upload, cloudinary };

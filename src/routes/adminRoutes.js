@@ -7,6 +7,8 @@ const { getReportSummary, exportReport } = require('../controllers/reportControl
 const { getAllJobs, approveJob, rejectJob, unpublishJob, deleteJob } = require('../controllers/adminJobController');
 const { getAllAds, updateAd, markAdPaid, approveAd, rejectAd, deactivateAd, deleteAd } = require('../controllers/adminAdController');
 const { getSubscribers, toggleSubscriber, deleteSubscriber } = require('../controllers/subscriberController');
+const { getSettings, updateSettings, uploadBrandVideo } = require('../controllers/settingsController');
+const { upload } = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
@@ -46,6 +48,10 @@ router.delete('/subscribers/:id', deleteSubscriber);
 
 router.get('/reports/summary', getReportSummary);
 router.get('/reports/export', exportReport);
+
+router.get('/settings', getSettings);
+router.put('/settings', updateSettings);
+router.post('/settings/upload-video', upload.single('video'), uploadBrandVideo);
 
 router.post('/seed', seedDatabase);
 
