@@ -211,9 +211,9 @@ const updateProperty = asyncHandler(async (req, res) => {
   }
   
   const allowed = [
-    'title','titleRw','description','descriptionRw',
+    'title','description',
     'type','transactionType','condition','currency',
-    'area','location','locationRw','address','city','country',
+    'area','location','address','city','country',
     'ownerPhone','ownerEmail','ownerUpi',
     'ownerPrice' // owner can update their desired price
   ];
