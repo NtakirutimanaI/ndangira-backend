@@ -9,8 +9,12 @@ const propertySchema = new mongoose.Schema(
     descriptionRw: { type: String },
     type: { type: String, enum: ['house', 'car', 'plot', 'material'], required: true },
     category: { type: String, required: true },
-    price: { type: Number },
+    // Owner's desired price (what they receive)
+    ownerPrice: { type: Number, required: true },
+    // Platform price displayed to clients (ownerPrice * 1.1)
+    platformPrice: { type: Number, required: true },
     currency: { type: String, default: 'RWF' },
+    platformFeePercent: { type: Number, default: 10 },
     area: { type: String, required: true },
     location: { type: String },
     locationRw: { type: String },
@@ -19,9 +23,14 @@ const propertySchema = new mongoose.Schema(
     country: { type: String, default: 'Rwanda' },
     images: [{ type: String }],
     videos: [{ type: String }],
-    contactPhone: { type: String },
-    contactEmail: { type: String },
-    upi: { type: String },
+    // Owner contact (hidden from public, visible to admin)
+    ownerPhone: { type: String },
+    ownerEmail: { type: String },
+    ownerUpi: { type: String },
+    // Platform contact (shown to clients)
+    platformPhone: { type: String },
+    platformEmail: { type: String },
+    platformUpi: { type: String },
     paymentStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     paymentAmount: { type: Number, default: 2000 },
     paymentTransactionId: { type: String },
