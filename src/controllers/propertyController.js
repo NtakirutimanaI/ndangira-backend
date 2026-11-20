@@ -234,6 +234,24 @@ const updateProperty = asyncHandler(async (req, res) => {
     payload.platformPrice = Math.round(payload.ownerPrice * (1 + PLATFORM_FEE_PERCENT / 100));
   }
   
+  // Handle file uploads - merge with existing
+  if (req.files) {
+    if (req.files.images) {
+      const newImages = req.files.images.map((f) => {
+        if (f.path.startsWith('http')) return f.path;
+        return path.basename(f.path);
+      });
+      payload.images = [...(property.images || []), ...newImages];
+    }
+    if (req.files.videos) {
+      const newVideos = req.files.videos.map((f) => {
+        if (f.path.startsWith('http')) return f.path;
+        return path.basename(f.path);
+      });
+      payload.videos = [...(property.videos || []), ...newVideos];
+    }
+  }
+  
   property = await Property.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
   res.status(200).json({ success: true, data: property });
 });
