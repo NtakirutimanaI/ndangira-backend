@@ -1,11 +1,18 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Job = require('../models/Job');
+const path = require('path');
 
 const PLATFORM_FEE_PERCENT = 10;
 
 const getPlatformContact = () => ({
   email: process.env.PLATFORM_EMAIL || 'jobs@isange.com',
 });
+
+const normalizeImagePath = (filePath) => {
+  if (!filePath) return undefined;
+  if (filePath.startsWith('http')) return filePath;
+  return path.basename(filePath);
+};
 
 const getPublishedJobs = asyncHandler(async (req, res) => {
   const jobs = await Job.find({ isPublished: true, status: 'approved', paymentStatus: 'paid' }).sort('-createdAt');
@@ -58,7 +65,7 @@ const submitJob = asyncHandler(async (req, res) => {
     description: String(description),
     applyEmail: applyEmail ? String(applyEmail).trim() : undefined,
     applyUrl: applyUrl ? String(applyUrl).trim() : undefined,
-    image: req.file ? req.file.path : undefined,
+    image: normalizeImagePath(req.file?.path),
     employerAmount: Number(employerAmount),
     platformAmount,
     currency: 'RWF',
@@ -87,7 +94,7 @@ const updateJob = asyncHandler(async (req, res) => {
   if (description !== undefined) job.description = String(description);
   if (applyEmail !== undefined) job.applyEmail = applyEmail ? String(applyEmail).trim() : undefined;
   if (applyUrl !== undefined) job.applyUrl = applyUrl ? String(applyUrl).trim() : undefined;
-  if (req.file) job.image = req.file.path;
+  if (req.file) job.image = normalizeImagePath(req.file.path);
   
   // Recalculate platformAmount if employerAmount changed
   if (employerAmount !== undefined) {

@@ -149,7 +149,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
-      submittedBy: admin._id
+      submittedBy: admin._id,
+      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800'
     },
     {
       title: 'Marketing Manager',
@@ -166,7 +167,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
-      submittedBy: admin._id
+      submittedBy: admin._id,
+      image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800'
     }
   ];
 

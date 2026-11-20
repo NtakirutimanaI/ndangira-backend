@@ -2,11 +2,15 @@ const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const sendToken = (res, statusCode, user) => {
   const token = user.getSignedJwtToken();
   const options = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'lax' : 'lax',
   };
   res.status(statusCode).cookie('token', token, options).json({ success: true, token, data: user });
 };
