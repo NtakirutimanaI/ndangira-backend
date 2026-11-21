@@ -34,23 +34,13 @@ async function connectDB() {
   return connectionPromise;
 }
 
-// CRITICAL: Connect to DB synchronously at module load BEFORE importing app
-// This blocks until DB is ready, preventing "bufferCommands = false" errors
-try {
-  require('await-to-js'); // just to ensure we can use top-level await pattern
-} catch (_) {}
-
-// Use promise-based connection that resolves before module exports
-const dbReady = connectDB();
-
 // Import the full Express app from src/app.js
 const app = require('./src/app');
 
 // Ensure DB connection on each request (reconnect if needed)
 app.use(async (req, res, next) => {
   try {
-    await dbReady; // wait for initial connection
-    await connectDB(); // ensure still connected
+    await connectDB(); // this handles retries and caching
     next();
   } catch (err) {
     const origin = req.headers.origin;
