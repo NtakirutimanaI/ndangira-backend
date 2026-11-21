@@ -202,7 +202,7 @@ const fmtDate = (d) => d ? new Date(d).toISOString().replace('T', ' ').slice(0, 
 
 const sendExcel = async (res, filename, sheets) => {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Isange';
+  wb.creator = 'Ndangira';
   wb.created = new Date();
   for (const s of sheets) {
     const ws = wb.addWorksheet((s.name || 'Sheet').slice(0, 31));
@@ -241,7 +241,7 @@ const sendPdf = (res, filename, reportType, meta, sections) => {
     const left = doc.page.margins.left;
     doc.save();
     doc.rect(0, 0, pageWidth, first ? 110 : 55).fill(brand);
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(first ? 22 : 14).text('Isange', left, first ? 28 : 18, { continued: false });
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(first ? 22 : 14).text('Ndangira', left, first ? 28 : 18, { continued: false });
     doc.font('Helvetica').fontSize(first ? 11 : 9).fillColor('#dcfce7').text('Property & Marketplace Platform', left, first ? 54 : 36);
     if (first) {
       doc.font('Helvetica-Bold').fontSize(18).fillColor('#ffffff').text(reportTitle, left, 74, { width: contentWidth, align: 'right' });
@@ -367,7 +367,7 @@ const sendPdf = (res, filename, reportType, meta, sections) => {
     const fy = doc.page.height - 30;
     doc.save();
     doc.moveTo(doc.page.margins.left, fy - 6).lineTo(pageWidth - doc.page.margins.right, fy - 6).strokeColor(border).lineWidth(0.5).stroke();
-    doc.fillColor(muted).font('Helvetica').fontSize(8).text('Isange Platform Report', doc.page.margins.left, fy, { lineBreak: false });
+    doc.fillColor(muted).font('Helvetica').fontSize(8).text('Ndangira Platform Report', doc.page.margins.left, fy, { lineBreak: false });
     doc.text(`${reportTitle}  Ã¢â‚¬Â¢  ${generated}`, doc.page.margins.left, fy, { width: contentWidth, align: 'center', lineBreak: false });
     doc.text(`Page ${i - range.start + 1} of ${totalPages}`, doc.page.margins.left, fy, { width: contentWidth, align: 'right', lineBreak: false });
     doc.restore();
@@ -485,7 +485,7 @@ const exportReport = asyncHandler(async (req, res) => {
         rows: data.subscribers.map(s => ({ email: s.email, active: s.isActive ? 'Yes' : 'No', created: fmtDate(s.createdAt) })),
       });
     }
-    return sendExcel(res, `isange-report-${reportTypeNorm}-${stamp}.xlsx`, sheets);
+    return sendExcel(res, `ndangira-report-${reportTypeNorm}-${stamp}.xlsx`, sheets);
   }
 
   // PDF
@@ -535,7 +535,7 @@ const exportReport = asyncHandler(async (req, res) => {
   if (reportTypeNorm === 'subscribers' || reportTypeNorm === 'all') {
     sections.push({ title: 'Subscribers', columns: ['Email', 'Active', 'Subscribed'], rows: data.subscribers.map(s => [s.email, s.isActive ? 'Yes' : 'No', fmtDate(s.createdAt)]) });
   }
-  sendPdf(res, `isange-report-${reportTypeNorm}-${stamp}.pdf`, reportTypeNorm, { from, to }, sections);
+  sendPdf(res, `ndangira-report-${reportTypeNorm}-${stamp}.pdf`, reportTypeNorm, { from, to }, sections);
 });
 
 module.exports = { getReportSummary, exportReport };

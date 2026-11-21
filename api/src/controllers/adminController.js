@@ -4,6 +4,7 @@ const Property = require('../models/Property');
 const Job = require('../models/Job');
 const Ad = require('../models/Ad');
 const Category = require('../models/Category');
+const Setting = require('../models/Setting');
 const bcrypt = require('bcryptjs');
 const { notifyUserVerified, notifyPropertyApproved, notifyPropertyRejected, notifySubscribersNewProperty } = require('../services/notifier');
 
@@ -24,7 +25,35 @@ const seedDatabase = asyncHandler(async (req, res) => {
     { name: 'New', slug: 'new', isPublished: true },
     { name: 'Used', slug: 'used', isPublished: true },
   ];
-  await Category.insertMany(categories);
+await Category.insertMany(categories);
+   
+  // Create default settings
+  await Setting.findOneAndUpdate({}, {
+    siteName: 'Isange',
+    siteTagline: 'Aho ibyo ukeneye bihurira',
+    logoUrl: '/isangeLogo.png',
+    faviconUrl: '/favicon.ico',
+    primaryColor: '#16a34a',
+    secondaryColor: '#f59e0b',
+    brandVideoUrl: '',
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    adminNewUserAlert: true,
+    adminNewPropertyAlert: true,
+    adminNewJobAlert: true,
+    adminNewAdAlert: true,
+    allowUserRegistration: true,
+    requireEmailVerification: true,
+    allowPropertyEditing: true,
+    allowJobPosting: true,
+    allowAdRequests: true,
+    platformPhone: '+250 787 832 490',
+    platformEmail: 'info@isange.com',
+    platformUpi: 'isange@bank',
+    supportWhatsApp: 'https://wa.me/250787832490',
+    updatesGroupLink: 'https://chat.whatsapp.com/GROUP_INVITE',
+  }, { upsert: true, new: true });
   
   // Create test users
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -149,7 +178,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
-      submittedBy: admin._id
+      submittedBy: admin._id,
+      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800'
     },
     {
       title: 'Marketing Manager',
@@ -166,7 +196,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
       paymentStatus: 'paid',
       status: 'approved',
       isPublished: true,
-      submittedBy: admin._id
+      submittedBy: admin._id,
+      image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800'
     }
   ];
 

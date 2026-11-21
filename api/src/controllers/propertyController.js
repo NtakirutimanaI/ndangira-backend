@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const Property = require('../models/Property');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const path = require('path');
 
 const PLATFORM_FEE_PERCENT = 10;
 
@@ -78,11 +79,17 @@ const createProperty = asyncHandler(async (req, res) => {
     platformUpi: platformContact.upi,
   };
   delete propertyData.paymentId;
-  delete propertyData.ownerPrice; // already set above
-  delete propertyData.platformPrice; // already set above
 
-  propertyData.images = req.files.images.map((f) => f.path);
-  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => f.path);
+  propertyData.images = req.files.images.map((f) => {
+    // For local storage, f.path is full path; we need just filename for /uploads/ URL
+    // For Cloudinary, f.path is the full URL
+    if (f.path.startsWith('http')) return f.path;
+    return path.basename(f.path);
+  });
+  if (req.files.videos) propertyData.videos = req.files.videos.map((f) => {
+    if (f.path.startsWith('http')) return f.path;
+    return path.basename(f.path);
+  });
 
   const property = await Property.create(propertyData);
 
@@ -211,11 +218,13 @@ const updateProperty = asyncHandler(async (req, res) => {
   }
   
   const allowed = [
-    'title','titleRw','description','descriptionRw',
+    'title','description',
     'type','transactionType','condition','currency',
-    'area','location','locationRw','address','city','country',
+    'area','location','address','city','country',
     'ownerPhone','ownerEmail','ownerUpi',
-    'ownerPrice' // owner can update their desired price
+    'ownerPrice', // owner can update their desired price
+    'images', // allow replacing full images array (URLs to keep)
+    'videos'  // allow replacing full videos array (URLs to keep)
   ];
   
   const payload = {};
@@ -225,6 +234,32 @@ const updateProperty = asyncHandler(async (req, res) => {
   if (payload.ownerPrice !== undefined) {
     payload.ownerPrice = Number(payload.ownerPrice);
     payload.platformPrice = Math.round(payload.ownerPrice * (1 + PLATFORM_FEE_PERCENT / 100));
+  }
+  
+  // Handle file uploads - merge with existing or with provided images/videos arrays
+  if (req.files) {
+    if (req.files.images) {
+      const newImages = req.files.images.map((f) => {
+        if (f.path.startsWith('http')) return f.path;
+        return path.basename(f.path);
+      });
+      // Start with images from body (if provided) or existing property images
+      const baseImages = payload.images || property.images || [];
+      payload.images = [...baseImages, ...newImages];
+    }
+    if (req.files.videos) {
+      const newVideos = req.files.videos.map((f) => {
+        if (f.path.startsWith('http')) return f.path;
+        return path.basename(f.path);
+      });
+      const baseVideos = payload.videos || property.videos || [];
+      payload.videos = [...baseVideos, ...newVideos];
+    }
+  } else if (payload.images !== undefined || payload.videos !== undefined) {
+    // If no new files but images/videos arrays provided in body, use them as-is
+    // (this allows removing images/videos by sending the reduced array)
+    if (payload.images === undefined) payload.images = property.images || [];
+    if (payload.videos === undefined) payload.videos = property.videos || [];
   }
   
   property = await Property.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });

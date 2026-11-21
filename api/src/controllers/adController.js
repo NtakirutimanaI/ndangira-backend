@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Ad = require('../models/Ad');
+const path = require('path');
 
 const getActiveAds = asyncHandler(async (req, res) => {
   const now = new Date();
@@ -37,11 +38,11 @@ const submitAdRequest = asyncHandler(async (req, res) => {
     throw error;
   }
   const amount = plan === 'yearly' ? 500000 : 50000;
-  const uploaded = (req.files && req.files.images ? req.files.images : []).map((f) => f.path);
+  const uploaded = (req.files && req.files.images ? req.files.images : []).map((f) => path.basename(f.path));
   const images = [...uploaded];
   const legacy = imageUrl ? String(imageUrl).trim() : '';
   if (legacy && !images.includes(legacy)) images.unshift(legacy);
-  const uploadedVideos = (req.files && req.files.videos ? req.files.videos : []).map((f) => f.path);
+  const uploadedVideos = (req.files && req.files.videos ? req.files.videos : []).map((f) => path.basename(f.path));
   const links = normalizeLinks(videoLinks);
 
   const ad = await Ad.create({
