@@ -53,7 +53,15 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.get('/', (req, res) => res.json({ message: 'Ndangira API running on Vercel' }));
+// Serve uploads with CORS headers for cross-origin video playback
+app.use('/uploads', (req, res, next) => {
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+}, express.static(path.join(__dirname, '..', 'uploads')));
+
+app.get('/', (req, res) => res.json({ message: 'Isange API running on Vercel' }));
 
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/properties', require('./src/routes/propertyRoutes'));
@@ -65,5 +73,8 @@ app.use('/api/ads', require('./src/routes/adRoutes'));
 app.use('/api/subscribers', require('./src/routes/subscriberRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use('/api/users', require('./src/routes/userRoutes'));
+
+// Public settings endpoint (no auth required)
+app.get('/api/settings', require('./src/controllers/settingsController').getSettings);
 
 module.exports = app;
