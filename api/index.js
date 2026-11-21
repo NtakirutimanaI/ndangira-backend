@@ -10,7 +10,24 @@ const app = express();
 app.use(express.json({ limit: '50mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+
+// CORS: allow localhost for dev, and the production frontend URL
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://ndangira-frontend-seven.vercel.app',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // Inline error handler
 app.use((err, req, res, next) => {
