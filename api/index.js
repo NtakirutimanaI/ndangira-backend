@@ -18,6 +18,7 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
+// CORS middleware - MUST be before all routes
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -29,11 +30,27 @@ app.use(cors({
   credentials: true
 }));
 
+// Ensure CORS headers on ALL responses (including errors)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  next();
+});
+
 // Inline error handler
 app.use((err, req, res, next) => {
   console.error(err);
   const status = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
+  // Ensure CORS headers even on error responses
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
   res.status(status).json({ success: false, error: message });
 });
 
@@ -66,6 +83,12 @@ app.use(async (req, res, next) => {
     await connectDB();
     next();
   } catch (err) {
+    // Ensure CORS headers even on DB connection errors
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
     res.status(500).json({ error: 'Database connection failed' });
   }
 });
@@ -73,7 +96,12 @@ app.use(async (req, res, next) => {
 // Serve uploads with CORS headers for cross-origin video playback
 app.use('/uploads', (req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
 }, express.static(path.join(__dirname, '..', 'uploads')));
