@@ -10,7 +10,6 @@ const app = express();
 
 // Actual production frontend URL - ensure CORS works even if env var is wrong
 const PRODUCTION_FRONTEND_URL = 'https://ndangira-frontend-seven.vercel.app';
-const CLIENT_URL = process.env.CLIENT_URL || PRODUCTION_FRONTEND_URL;
 
 // Security headers
 app.use(helmet({
@@ -22,7 +21,7 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       mediaSrc: ["'self'", "https:", "blob:", "data:"],
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", CLIENT_URL, 'http://localhost:5173'],
+      connectSrc: ["'self'", PRODUCTION_FRONTEND_URL, 'http://localhost:5173'],
       frameAncestors: ["'none'"],
     },
   },
@@ -64,14 +63,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS: Allow production frontend, localhost, and CLIENT_URL if valid
+// CORS: Allow production frontend, localhost
 app.use(cors({
   origin: (origin, callback) => {
     const allowed = [
       PRODUCTION_FRONTEND_URL,
-      'http://localhost:5173',
-      CLIENT_URL
-    ].filter(Boolean);
+      'http://localhost:5173'
+    ];
     if (!origin || allowed.includes(origin)) {
       callback(null, true);
     } else {
@@ -85,7 +83,7 @@ app.use(cors({
 app.use('/uploads', (req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   const origin = req.headers.origin;
-  const allowed = [PRODUCTION_FRONTEND_URL, 'http://localhost:5173', CLIENT_URL].filter(Boolean);
+  const allowed = [PRODUCTION_FRONTEND_URL, 'http://localhost:5173'];
   if (allowed.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
