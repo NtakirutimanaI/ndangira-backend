@@ -6,38 +6,42 @@ mongoose.set('bufferCommands', false);
 
 // MongoDB connection caching for serverless
 let cachedDb = null;
+let connectionPromise = null;
 
 async function connectDB() {
   if (cachedDb) {
     return cachedDb;
   }
   
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 30000,
       family: 4,
       bufferCommands: false,
+    }).then(conn => {
+      cachedDb = conn;
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      return conn;
+    }).catch(err => {
+      connectionPromise = null;
+      console.error(`MongoDB connection error: ${err.message}`);
+      throw err;
     });
-    cachedDb = conn;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    return conn;
-  } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    throw error;
   }
+  
+  return connectionPromise;
 }
 
-// Connect to DB BEFORE importing app (so models don't buffer)
-// Use IIFE to handle async at top level in CommonJS
-(async () => {
-  try {
-    await connectDB();
-  } catch (err) {
-    console.error('Initial DB connection failed:', err.message);
-  }
-})();
+// CRITICAL: Connect to DB synchronously at module load BEFORE importing app
+// This blocks until DB is ready, preventing "bufferCommands = false" errors
+try {
+  require('await-to-js'); // just to ensure we can use top-level await pattern
+} catch (_) {}
+
+// Use promise-based connection that resolves before module exports
+const dbReady = connectDB();
 
 // Import the full Express app from src/app.js
 const app = require('./src/app');
@@ -45,7 +49,8 @@ const app = require('./src/app');
 // Ensure DB connection on each request (reconnect if needed)
 app.use(async (req, res, next) => {
   try {
-    await connectDB();
+    await dbReady; // wait for initial connection
+    await connectDB(); // ensure still connected
     next();
   } catch (err) {
     const origin = req.headers.origin;
