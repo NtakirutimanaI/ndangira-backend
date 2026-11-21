@@ -11,46 +11,47 @@ app.use(express.json({ limit: '50mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// CORS: allow localhost for dev, and the production frontend URL
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://ndangira-frontend-seven.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
+// CORS: Allow the production frontend and localhost for dev
+const CLIENT_URL = process.env.CLIENT_URL || 'https://ndangira-frontend-seven.vercel.app';
 
-// CORS middleware - MUST be before all routes
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-
-// Ensure CORS headers on ALL responses (including errors)
+// Simple CORS middleware that always allows our frontend
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  // Allow our production frontend, localhost, and any origin if CLIENT_URL matches
+  if (origin === 'https://ndangira-frontend-seven.vercel.app' || 
+      origin === 'http://localhost:5173' ||
+      origin === CLIENT_URL) {
     res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    // Fallback to allow the known production URL
+    res.header('Access-Control-Allow-Origin', 'https://ndangira-frontend-seven.vercel.app');
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
   }
   next();
 });
 
-// Inline error handler
+// Inline error handler - ensure CORS headers on errors too
 app.use((err, req, res, next) => {
   console.error(err);
   const status = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
   // Ensure CORS headers even on error responses
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  if (origin === 'https://ndangira-frontend-seven.vercel.app' || 
+      origin === 'http://localhost:5173' ||
+      origin === CLIENT_URL) {
     res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', 'https://ndangira-frontend-seven.vercel.app');
   }
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.status(status).json({ success: false, error: message });
 });
 
@@ -85,10 +86,14 @@ app.use(async (req, res, next) => {
   } catch (err) {
     // Ensure CORS headers even on DB connection errors
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (origin === 'https://ndangira-frontend-seven.vercel.app' || 
+        origin === 'http://localhost:5173' ||
+        origin === CLIENT_URL) {
       res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
+    } else {
+      res.header('Access-Control-Allow-Origin', 'https://ndangira-frontend-seven.vercel.app');
     }
+    res.header('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ error: 'Database connection failed' });
   }
 });
@@ -97,10 +102,12 @@ app.use(async (req, res, next) => {
 app.use('/uploads', (req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  if (origin === 'https://ndangira-frontend-seven.vercel.app' || 
+      origin === 'http://localhost:5173' ||
+      origin === CLIENT_URL) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
-    res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
+    res.header('Access-Control-Allow-Origin', 'https://ndangira-frontend-seven.vercel.app');
   }
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
