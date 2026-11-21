@@ -43,11 +43,19 @@ async function connectDB() {
   return connectionPromise;
 }
 
-// CRITICAL: Connect to DB BEFORE importing routes/controllers/models
-// This ensures models don't try to use DB before connection
-await connectDB();
-
 const app = express();
+
+// CRITICAL: Connect to DB BEFORE importing routes/controllers/models
+// Use IIFE to handle async in CommonJS - this blocks module evaluation until DB connects
+(async () => {
+  try {
+    await connectDB();
+    console.log('Initial DB connection established before routes load');
+  } catch (err) {
+    console.error('Initial DB connection failed:', err.message);
+    // Don't throw - let middleware handle retries on first request
+  }
+})();
 
 // Security headers
 app.use(helmet({
