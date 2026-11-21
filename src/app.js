@@ -7,8 +7,6 @@ const rateLimit = require('express-rate-limit');
 const errorMiddleware = require('./middleware/errorMiddleware');
 const mongoose = require('mongoose');
 
-const app = express();
-
 // Actual production frontend URL - ensure CORS works even if env var is wrong
 const PRODUCTION_FRONTEND_URL = 'https://ndangira-frontend-seven.vercel.app';
 
@@ -45,27 +43,11 @@ async function connectDB() {
   return connectionPromise;
 }
 
-// Ensure DB connection on EVERY request - runs BEFORE any routes
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      PRODUCTION_FRONTEND_URL,
-      'http://localhost:5173'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    } else {
-      res.header('Access-Control-Allow-Origin', PRODUCTION_FRONTEND_URL);
-    }
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.status(500).json({ error: 'Database connection failed' });
-  }
-});
+// CRITICAL: Connect to DB BEFORE importing routes/controllers/models
+// This ensures models don't try to use DB before connection
+await connectDB();
+
+const app = express();
 
 // Security headers
 app.use(helmet({
@@ -88,6 +70,51 @@ app.use(helmet({
     includeSubDomains: true,
     preload: true,
   },
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: { success: false, error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { success: false, error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  message: { success: false, error: 'Upload limit exceeded, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// CORS: Allow production frontend, localhost
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      PRODUCTION_FRONTEND_URL,
+      'http://localhost:5173'
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 
 // Serve uploads with CORS headers for cross-origin video playback
