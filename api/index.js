@@ -30,7 +30,14 @@ async function connectDB() {
 }
 
 // Connect to DB BEFORE importing app (so models don't buffer)
-await connectDB();
+// Use IIFE to handle async at top level in CommonJS
+(async () => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('Initial DB connection failed:', err.message);
+  }
+})();
 
 // Import the full Express app from src/app.js
 const app = require('./src/app');
