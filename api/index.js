@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json({ limit: '50mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
 
 // Inline error handler
 app.use((err, req, res, next) => {
@@ -56,7 +56,7 @@ app.use(async (req, res, next) => {
 // Serve uploads with CORS headers for cross-origin video playback
 app.use('/uploads', (req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
+  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
 }, express.static(path.join(__dirname, '..', 'uploads')));
