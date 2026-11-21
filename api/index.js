@@ -1,9 +1,8 @@
 require('dotenv').config();
-const path = require('path');
 const mongoose = require('mongoose');
 
-// Import the full Express app from src/app.js
-const app = require('./src/app');
+// Disable Mongoose buffering globally - critical for serverless
+mongoose.set('bufferCommands', false);
 
 // MongoDB connection caching for serverless
 let cachedDb = null;
@@ -30,7 +29,13 @@ async function connectDB() {
   }
 }
 
-// Ensure DB connection on each request
+// Connect to DB BEFORE importing app (so models don't buffer)
+await connectDB();
+
+// Import the full Express app from src/app.js
+const app = require('./src/app');
+
+// Ensure DB connection on each request (reconnect if needed)
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -39,9 +44,8 @@ app.use(async (req, res, next) => {
     const origin = req.headers.origin;
     const allowedOrigins = [
       'https://ndangira-frontend-seven.vercel.app',
-      'http://localhost:5173',
-      process.env.CLIENT_URL
-    ].filter(Boolean);
+      'http://localhost:5173'
+    ];
     
     if (allowedOrigins.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
